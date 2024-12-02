@@ -1,22 +1,27 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const connectDB = require('./config/db');
-const exampleRoutes = require('./routes/exampleRoutes');
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const authRoutes = require('./routes/authRoutes'); // Import auth routes
 
 dotenv.config();
 connectDB();
 
 const app = express();
+
+// Enable CORS
+app.use(cors({
+    origin: 'http://localhost:3002', // Your frontend's URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+}));
+
+// Middleware to parse JSON
 app.use(express.json());
 
-// Routes
-app.use('/api/examples', exampleRoutes);
-
-module.exports = app;
-
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
-
+// Swagger Documentation Setup
 const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
@@ -31,3 +36,14 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+// Use Auth Routes
+app.use('/api/auth', authRoutes); // Register the auth routes
+
+// Start server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
+
+module.exports = app;
